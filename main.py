@@ -1,19 +1,24 @@
-# 安装依赖：pip install python-docx ttkbootstrap pandas
-
+#安装pip install ttkbootstrap pandas openpyxl python-docx tkinterdnd2
+# 学号抽取器 v2.0（混合数据版）
+# 安装依赖：pip install python-docx  # 新增Word文档解析依赖
 import ctypes
+import sys
+import os
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import random
-import sys
-import os
-from docx import Document  # 新增正确导入
-from docx.opc.exceptions import PackageNotFoundError  # 新增异常处理 
+import pandas as pd
+from docx import Document
+from docx.opc.exceptions import PackageNotFoundError
 import ttkbootstrap as tbs
 from ttkbootstrap.constants import *
-import pandas as pd
+from tkinterdnd2 import DND_FILES, TkinterDnD
 
 # 系统级设置
-ctypes.windll.shcore.SetProcessDpiAwareness(1)
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except AttributeError:
+    print("警告：无法设置 DPI Awareness，可能影响界面显示。")
 sys.stdout = open(os.devnull, 'w') if 'ONEFILE' in os.environ else sys.stdout
 
 class NumberPickerApp:
@@ -22,7 +27,7 @@ class NumberPickerApp:
         self.language = "zh"  # 新增：默认语言
         self.translations = {
             "zh": {
-                "title": "🎓 智能数据抽取器 v1.0",
+                "title": "🎓 智能抽取器 v2.0",
                 "import": "📂 导入数据文件",
                 "not_loaded": "未加载文件",
                 "setting": "⚙️ 设置",
@@ -40,7 +45,7 @@ class NumberPickerApp:
                 "clear_all": "清除所有数据？",
                 "font_size": "结果字体大小:",
                 "pick_count": "一次抽取人数:",
-                "speed": "抽取动画时间(ms):",
+                "speed": "抽取动画速度(ms):",
                 "save": "保存",
                 "settings": "设置",
                 "language": "语言选择:",
@@ -55,7 +60,7 @@ class NumberPickerApp:
                 "no_candidates": "无有效候选数据",
             },
             "en": {
-                "title": "🎓 Smart Data Picker v1.0",
+                "title": "🎓 SmartPicker v2.0",
                 "import": "📂 Import Data File",
                 "not_loaded": "No file loaded",
                 "setting": "⚙️ Settings",
@@ -68,8 +73,6 @@ class NumberPickerApp:
                 "scrolling": "🎚 Rolling...",
                 "file_loaded": "File Loaded",
                 "no_valid_data": "No valid data in file",
-                "error": "Error",
-                "confirm": "Confirm",
                 "clear_all": "Clear all data?",
                 "font_size": "Result Font Size:",
                 "pick_count": "Pick Count:",
@@ -90,6 +93,10 @@ class NumberPickerApp:
         }
         self.root.title(self.t("title"))
         self.root.geometry("920x680")
+
+        # 初始化拖放功能
+        self.root.drop_target_register(DND_FILES)
+        self.root.dnd_bind('<<Drop>>', self.handle_file_drop)
         
         # 核心配置
         self.DEFAULT_FONT = ("微软雅黑", 14)
@@ -100,6 +107,7 @@ class NumberPickerApp:
         self.PICK_COUNT = 1  # 新增：一次抽取人数
         self.FONT_SIZE = 30  # 新增：结果字体大小
         self.ANIMATION_SPEED = 20  # 新增：动画速度(ms)
+        self.allow_duplicates = False  # 新增：是否允许重复抽取
         
         # 数据存储
         self.excel_path = None
@@ -191,13 +199,14 @@ class NumberPickerApp:
 
     def configure_styles(self):
         self.style = tbs.Style()
-        self.style.configure("Result.TLabel",
+        self.style.configure(
+            "Result.TLabel",
             font=("微软雅黑", 80, "bold"),
             foreground="#2ecc71",
             borderwidth=6,
             padding=60,
-            anchor='center'  # 改为小写并确保支持双向居中
-    )
+            anchor='center'
+        )  # 确保括号正确闭合
     def reset_ui(self):
         self.start_entry.delete(0, tk.END)
         self.start_entry.insert(0, self.DEFAULT_START)
@@ -214,6 +223,10 @@ class NumberPickerApp:
         )
         if not file_path: return
 
+        self.import_file(file_path)
+
+    def import_file(self, file_path):
+        """导入文件的逻辑"""
         try:
             file_ext = os.path.splitext(file_path)[1].lower()
             
@@ -244,29 +257,22 @@ class NumberPickerApp:
                     self.raw_data = [line.strip() for line in f.readlines()]
             elif file_ext == '.docx':
                 try:
-                    doc = Document(file_path)  # 正确加载Word文档
+                    doc = Document(file_path)
                     self.raw_data = []
-                    
-                    # 优先提取表格数据（逐行处理，避免单元格重复）
                     for table in doc.tables:
                         for row in table.rows:
                             row_data = [cell.text.strip() for cell in row.cells]
-                            self.raw_data.extend([d for d in row_data if d])  # 提取非空单元格
-                    
-                    # 若表格数据为空，则提取段落文本（跳过空段落）
+                            self.raw_data.extend([d for d in row_data if d])
                     if not self.raw_data:
                         for para in doc.paragraphs:
                             text = para.text.strip()
                             if text:
                                 self.raw_data.append(text)
-                    
-                    # 新增：处理Word文档的特殊格式（如换行符）
                     self.clean_data = [item.replace('\n', ' ').strip() for item in self.raw_data if item.strip()]
-
                 except PackageNotFoundError:
                     raise ValueError(self.t("invalid_word"))
                 except Exception as e:
-                    messagebox.showerror(self.t("import_failed"), f"❌ {self.t('error')}: {str(e)} \n\n💡 提示：确保Word文件未加密，且安装了python-docx（pip install python-docx）")
+                    messagebox.showerror(self.t("import_failed"), f"❌ {self.t('error')}: {str(e)}")
                     self._reset_import_state()
             # 通用数据清洗
             self.clean_data = [item.strip() for item in self.raw_data if item.strip() != '']
@@ -282,6 +288,8 @@ class NumberPickerApp:
             self.root.after(3000, lambda: self.file_status.config(
                 text=self.t("file_loaded"), foreground="#7f8c8d"
             ))
+            print(f"导入文件路径: {file_path}")
+            print(f"清洗后的数据: {self.clean_data}")
 
         except Exception as e:
             messagebox.showerror(self.t("import_failed"), f"❌ {self.t('error')}: {str(e)}")
@@ -358,17 +366,25 @@ class NumberPickerApp:
         if self.animation_step < self.ANIMATION_FRAMES:
             # 支持多人数抽取
             pick_count = min(self.PICK_COUNT, len(self.shuffled_data))
-            indices = random.sample(range(len(self.shuffled_data)), pick_count)
-            result = "\n".join([self.shuffled_data[i] for i in indices])
+            if self.allow_duplicates:
+                # 允许重复抽取
+                result = "\n".join(random.choices(self.shuffled_data, k=pick_count))
+            else:
+                # 不允许重复抽取
+                indices = random.sample(range(len(self.shuffled_data)), pick_count)
+                result = "\n".join([self.shuffled_data[i] for i in indices])
             self.result_label.config(
                 text=result,
-                foreground="#e74c3c" if self.animation_step%3 else "#3498db"
+                foreground="#e74c3c" if self.animation_step % 3 else "#3498db"
             )
             self.animation_step += 1
             self.root.after(self.ANIMATION_SPEED, self.run_animation)
         else:
             pick_count = min(self.PICK_COUNT, len(self.shuffled_data))
-            result = "\n".join(self.shuffled_data[:pick_count])
+            if self.allow_duplicates:
+                result = "\n".join(random.choices(self.shuffled_data, k=pick_count))
+            else:
+                result = "\n".join(self.shuffled_data[:pick_count])
             self.result_label.config(text=result, foreground="#2ecc71")
             self.start_btn.config(state=NORMAL)
             self.root.bell()
@@ -382,7 +398,7 @@ class NumberPickerApp:
     def open_settings(self):
         setting_win = tbs.Toplevel(self.root)
         setting_win.title(self.t("settings"))
-        setting_win.geometry("400x450")
+        setting_win.geometry("400x500")  # 调整窗口高度
         setting_win.resizable(False, False)
 
         tbs.Label(setting_win, text=self.t("font_size"), font=self.DEFAULT_FONT).pack(pady=10)
@@ -408,12 +424,24 @@ class NumberPickerApp:
         tbs.Radiobutton(lang_frame, text=self.t("chinese"), variable=lang_var, value="zh").pack(side=LEFT, padx=10)
         tbs.Radiobutton(lang_frame, text=self.t("english"), variable=lang_var, value="en").pack(side=LEFT, padx=10)
 
+        # 新增“是否允许重复抽取”选项
+        allow_duplicates_var = tk.BooleanVar(value=self.allow_duplicates)
+        tbs.Label(setting_win, text="是否允许重复抽取:", font=self.DEFAULT_FONT).pack(pady=10)
+        allow_duplicates_check = tbs.Checkbutton(
+            setting_win, 
+            text="允许重复", 
+            variable=allow_duplicates_var, 
+            bootstyle="round-toggle"
+        )
+        allow_duplicates_check.pack()
+
         def save_settings():
             try:
                 self.FONT_SIZE = max(10, int(font_size_var.get()))
                 self.PICK_COUNT = max(1, int(pick_count_var.get()))
                 self.ANIMATION_SPEED = max(5, int(speed_var.get()))
                 self.language = lang_var.get()
+                self.allow_duplicates = allow_duplicates_var.get()  # 保存“是否允许重复抽取”选项
                 self.result_label.config(font=("微软雅黑", self.FONT_SIZE))
                 # 重新刷新界面文本
                 self.refresh_texts()
@@ -434,8 +462,16 @@ class NumberPickerApp:
         self.reset_btn.config(text=self.t("reset"))  # 刷新“重置数据”按钮
         # 这里只刷新主要按钮和标签，复杂布局可重启程序生效
 
+    def handle_file_drop(self, event):
+        file_path = event.data.strip().strip('{}')  # 移除路径中的花括号
+        if os.path.isfile(file_path):
+            self.import_file(file_path)
+
 if __name__ == "__main__":
-    root = tbs.Window(themename="cyborg")
-    root.resizable(True, True)
+    # 使用 TkinterDnD 的窗口类
+    root = TkinterDnD.Tk()  
+    # 手动应用 ttkbootstrap 主题
+    style = tbs.Style(theme="darkly")  
+    root.geometry("920x680")
     app = NumberPickerApp(root)
     root.mainloop()

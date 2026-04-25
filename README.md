@@ -1,25 +1,21 @@
 # SmartPicker
 A smart student number picker
-🎓 智能数据抽取器 (Smart Data Picker) v1.0
+🎓 智能数据抽取器 (SmartPicker) v2.0
 智能数据抽取器 是一款基于 Python 开发的多功能、Windows10/11桌面应用程序。它支持从多种文件格式（Excel, CSV, Word, TXT）中导入数据，或手动设定数字范围进行随机抽取。适用于抽奖、课堂提问、随机选人、样本抽检等多种场景。
 
 ✨ 核心功能
 多格式支持：一键导入 .xlsx, .xls, .csv, .docx, .txt 文件。
 
 智能解析：自动识别 Word 中的表格或段落，自动探测 Excel/CSV 的有效数据列。
-
 自定义范围：支持手动输入起始和结束编号，进行纯数字随机抽取。
 
 高度定制化：
-
 抽取人数：支持一次性抽取 1 人或多个人。
-
 视觉设置：可调节结果显示的字体大小。
-
 动画控制：支持自定义随机滚动动画的速度。
-
 多语言支持：内置 简体中文 与 English 双语切换。
-
+重复抽取控制：可选择是否允许重复抽取同一数据。
+拖放导入：支持将文件拖拽到窗口进行快速导入。
 现代化 UI：基于 ttkbootstrap 的 Cyborg 暗黑风格界面，支持高 DPI 缩放。
 
 🚀 快速开始
@@ -28,15 +24,17 @@ A smart student number picker
 
 2. 安装依赖
 打开终端/命令行，运行以下命令安装必要的库：
-pip install python-docx ttkbootstrap pandas openpyxl
+pip install python-docx ttkbootstrap pandas openpyxl tkinterdnd2
 
 3. 运行程序
 在项目根目录下执行：
 python main.py
+
 📖 使用指南
 数据导入：
 点击 "📂 导入数据文件"：选择准备好的文件，程序会自动统计有效条目数。
-导入的excel文档姓名要填在表格第一列
+导入的excel文档姓名要填在表格第一列 ，且第一行不能为数字
+拖放导入：直接将文件拖拽到程序窗口中进行导入。
 
 手动范围：若不导入文件，直接在“起始编号”和“结束编号”中输入数字（如 1-50）。
 
@@ -44,7 +42,9 @@ python main.py
 点击 "⚙️ 设置"：
 修改 结果字体大小（适合大屏幕投影显示）。
 修改 一次抽取人数。
+修改 动画速度。
 选择 语言 并保存。
+设置 是否允许重复抽取（开启后可重复抽取同一数据）。
 
 开始抽取：
 点击 "🚀 开始抽取"，屏幕将进入随机滚动动画，最终停留在中奖结果。
@@ -56,6 +56,7 @@ python main.py
 GUI 框架: ttkbootstrap (基于 tkinter 的美化库)
 数据处理: pandas (Excel/CSV 处理)
 文档解析: python-docx (Word 抽取)
+拖放功能: tkinterdnd2 (文件拖拽支持)
 核心逻辑: random 随机算法
 
 📝 开发与维护
@@ -65,8 +66,6 @@ GUI 框架: ttkbootstrap (基于 tkinter 的美化库)
 未来规划：
 
 [ ] 增加导出中奖历史记录功能。
-
-[ ] 支持排除已抽取的人员（不重复抽取模式）。
 
 [ ] 增加更多主题配色方案。
 
