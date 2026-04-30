@@ -1,77 +1,70 @@
-# SmartPicker
-A smart student number picker
-🎓 智能数据抽取器 (SmartPicker) v2.0
-智能数据抽取器 是一款基于 Python 开发的多功能、Windows10/11桌面应用程序。它支持从多种文件格式（Excel, CSV, Word, TXT）中导入数据，或手动设定数字范围进行随机抽取。适用于抽奖、课堂提问、随机选人、样本抽检等多种场景。
+# SmartPicker v2.0
 
-程序运行截图：
-![alt text](Pic\image0.png)
+SmartPicker 是一个基于 Python 和 Tkinter 的智能抽取工具，支持从 Excel、CSV、TXT、Word 文档导入数据，并提供随机抽取、手动范围抽取、动画滚动、批量抽取和多语言界面功能。
 
-✨ 核心功能
-多格式支持：一键导入 .xlsx, .xls, .csv, .docx, .txt 文件。
+## 主要功能
 
-智能解析：自动识别 Word 中的表格或段落，自动探测 Excel/CSV 的有效数据列。
-自定义范围：支持手动输入起始和结束编号，进行纯数字随机抽取。
+- 支持导入 `.xlsx`、`.xls`、`.csv`、`.txt` 和 `.docx` 数据文件
+- 自动解析表格和段落文本，智能提取候选数据
+- 支持手动输入起始和结束编号进行范围抽取
+- 可配置抽取人数、结果字体大小、动画速度
+- 支持重复抽取 / 不允许重复抽取两种模式
+- 提供简体中文和 English 两种语言界面
+- 支持拖拽文件导入
 
-高度定制化：
-抽取人数：支持一次性抽取 1 人或多个人。
-视觉设置：可调节结果显示的字体大小。
-动画控制：支持自定义随机滚动动画的速度。
-多语言支持：内置 简体中文 与 English 双语切换。
-重复抽取控制：可选择是否允许重复抽取同一数据。
-拖放导入：支持将文件拖拽到窗口进行快速导入。
-现代化 UI：基于 ttkbootstrap 的 Cyborg 暗黑风格界面，支持高 DPI 缩放。
+## 运行环境
 
-🚀 快速开始
-1. 环境准备
-确保您的电脑已安装 Python 3.10 或更高版本。
+- Python 3.8+
+- Windows 系统（使用 `ctypes.windll.shcore.SetProcessDpiAwareness` 进行 DPI 适配）
 
-2. 安装依赖
-打开终端/命令行，运行以下命令安装必要的库：
-pip install python-docx ttkbootstrap pandas openpyxl tkinterdnd2
+## 依赖项
 
-3. 运行程序
-在项目根目录下执行：
+```bash
+pip install ttkbootstrap pandas openpyxl python-docx tkinterdnd2
+```
+
+## 使用说明
+
+1. 下载或克隆仓库到本地：
+
+```bash
+git clone <仓库地址>
+cd SmartPicker
+```
+
+2. 安装依赖：
+
+```bash
+pip install ttkbootstrap pandas openpyxl python-docx tkinterdnd2
+```
+
+3. 运行程序：
+
+```bash
 python main.py
+```
 
-📖 使用指南
-数据导入：
-点击 "📂 导入数据文件"：选择准备好的文件，程序会自动统计有效条目数。
-导入的excel文档姓名要填在表格第一列 ，且第一行不能为数字
-![alt text](Pic\image1.png)
-拖放导入：直接将文件拖拽到程序窗口中进行导入。
+4. 在程序中：
 
-手动范围：若不导入文件，直接在“起始编号”和“结束编号”中输入数字（如 1-50）。
+- 点击“导入数据文件”选择支持的文件类型
+- 或将数据文件拖拽到窗口中
+- 如果没有导入数据，可手动输入“起始编号”和“结束编号”进行范围抽取
+- 点击“开始抽取”进行随机抽取
+- 点击“设置”可修改字体大小、抽取人数、动画速度、语言和重复抽取模式
+- 点击“重置数据”清除已加载的数据和当前结果
 
-参数设置：
-点击 "⚙️ 设置"：
-修改 结果字体大小（适合大屏幕投影显示）。
-修改 一次抽取人数。
-修改 动画速度。
-选择 语言 并保存。
-设置 是否允许重复抽取（开启后可重复抽取同一数据）。
-![alt text](Pic\image2.png)
-开始抽取：
-点击 "🚀 开始抽取"，屏幕将进入随机滚动动画，最终停留在中奖结果。
+## 支持文件格式
 
-数据重置：
-点击 "🗑 重置数据" 清空当前加载的文件或编号设置。
+- Excel：`.xlsx`, `.xls`
+- CSV：`.csv`
+- 文本文件：`.txt`
+- Word 文档：`.docx`
 
-🛠 技术栈
-GUI 框架: ttkbootstrap (基于 tkinter 的美化库)
-数据处理: pandas (Excel/CSV 处理)
-文档解析: python-docx (Word 抽取)
-拖放功能: tkinterdnd2 (文件拖拽支持)
-核心逻辑: random 随机算法
+## 代码结构
 
-📝 开发与维护
-注意事项：
-如果导入Excel 或 Word 文件，请确保文件未被其他程序占用且未加密。
-在高分辨率（4K）屏幕下，程序已内置 DPI 感知处理，显示效果清晰。
+- `main.py`：程序主入口和 GUI 实现
+- `LICENSE`：项目开源许可证
 
-未来规划：
-[ ] 增加导出被抽中名单历史记录功能。
+## 许可证
 
-[ ] 增加更多主题配色方案。
-
-📄 开源协议
-本项目采用 MIT License。您可以自由地使用、修改和分发。
+本项目基于 MIT 许可证开源，详见 `LICENSE`。
